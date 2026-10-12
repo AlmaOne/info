@@ -6,7 +6,8 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="alma-version" content="v1"><!-- при промяна: +1 тук и долу („Ефирът на София · версия …“) -->
 <title>Ефирът на София – Alma Plus</title>
-<!-- Ефирът на София: слушатели онлайн на софийските радиа.
+<!-- Repo „info“ (almaone.github.io/info/). Менюто води към /cast/…; „▶ Слушай“ работи, защото двете са на един адрес.
+     Ефирът на София: слушатели онлайн на софийските радиа.
      Където сървърът позволява, браузърът чете броя сам (на живо, на всяка минута).
      Останалите – от клона „sofia-data“, който GitHub Actions обновява на ~5 мин (scripts/sofia-collect.js).
      Списъкът с радиата: sofia/stations.json -->
@@ -83,7 +84,7 @@
 <div class="wrap">
   <div class="top">
     <h1>Ефирът на София</h1>
-    <nav><a href="player.html" id="listenBtn" class="listen">▶ Слушай</a><a href="covers.html">Обложки</a><a href="tools.html">Инструменти</a><a href="sofia.html" class="on">Ефирът на София</a><a href="play.html">Пусни на устройство</a><a href="index.html" target="_blank" title="Екранът, който показва устройството при Cast – телевизор, Nest Hub, Smart Clock… (отваря се в нов прозорец; звук няма – пуска се само през Cast)">Екранът на телевизора ↗</a></nav>
+    <nav><a href="/cast/player.html" id="listenBtn" class="listen">▶ Слушай</a><a href="/cast/covers.html">Обложки</a><a href="/cast/tools.html">Инструменти</a><a href="sofia.html" class="on">Ефирът на София</a><a href="/cast/play.html">Пусни на устройство</a><a href="/cast/index.html" target="_blank" title="Екранът, който показва устройството при Cast – телевизор, Nest Hub, Smart Clock… (отваря се в нов прозорец; звук няма – пуска се само през Cast)">Екранът на телевизора ↗</a></nav>
   </div>
 
   <div class="grid4">
@@ -132,8 +133,8 @@
 (function(){
   // ---- настройки ----
   var OWNER = (location.hostname.match(/^([^.]+)\.github\.io$/) || [0, 'almaone'])[1];
-  var REPO = location.pathname.split('/')[1] || 'cast';
-  if (!/github\.io$/.test(location.hostname)) { OWNER = 'almaone'; REPO = 'cast'; }
+  var REPO = location.pathname.split('/')[1] || 'info';
+  if (!/github\.io$/.test(location.hostname)) { OWNER = 'almaone'; REPO = 'info'; }
   var DATA_URL = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/sofia-data/stats.json';
   var LIVE_EVERY = 60e3, DATA_EVERY = 120e3, TIMEOUT = 7000;
   document.getElementById('histLink').href = 'https://github.com/' + OWNER + '/' + REPO + '/tree/sofia-data/history';
@@ -320,9 +321,9 @@
     e.preventDefault();
     if (st === 'play' || st === 'wait' || st === 'err') { if (bc) bc.postMessage({ cmd: 'stop' }); return; }
     var w = null; try { w = window.open('', 'alma-player', 'width=420,height=170,resizable=yes'); } catch (x) {}
-    if (!w) { window.open('player.html?play=1', '_blank'); return; }
+    if (!w) { window.open('/cast/player.html?play=1', '_blank'); return; }
     var fresh = true; try { fresh = !w.location.href || w.location.href === 'about:blank'; } catch (x) {}
-    if (fresh) w.location.href = 'player.html?play=1'; else if (bc) bc.postMessage({ cmd: 'play' });
+    if (fresh) w.location.href = '/cast/player.html?play=1'; else if (bc) bc.postMessage({ cmd: 'play' });
     try { w.focus(); } catch (x) {}
   });
   paint();

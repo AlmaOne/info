@@ -118,6 +118,13 @@ function sofiaTime(d) { return new Intl.DateTimeFormat('bg-BG', { timeZone: TZ, 
     .map(s => [sofiaTime(now), '"' + s.name.replace(/"/g, '""') + '"', s.listeners, s.peak].join(',')).join('\n');
   fs.appendFileSync(csv, head + rows + '\n');
 
+  // пазим историята само за последните KEEP_DAYS дни (по подразбиране 90)
+  const keep = +(process.env.KEEP_DAYS || 90);
+  const oldest = sofiaDate(new Date(now - keep * 864e5));
+  for (const f of fs.readdirSync(path.join(OUT, 'history'))) {
+    if (/^\d{4}-\d{2}-\d{2}\.csv$/.test(f) && f.slice(0, 10) < oldest) fs.unlinkSync(path.join(OUT, 'history', f));
+  }
+
   const ok = out.filter(s => s.status === 'ok');
   console.log(`${ok.length}/${out.length} радиа с данни, общо ${ok.reduce((a, s) => a + s.listeners, 0)} слушатели`);
 })().catch(e => { console.error(e); process.exit(1); });
