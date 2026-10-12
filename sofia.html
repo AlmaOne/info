@@ -188,7 +188,8 @@
     if (/\.m3u8/i.test(s)) return Promise.reject('hls');
     var known = direct[s];
     if (known === 'no') return Promise.reject('no');
-    var order = known ? [known] : Object.keys(METHODS);
+    // адрес с ?sid= е SHOUTcast – пробваме него първо (Icecast проверката там чака до изтичане на времето)
+    var order = known ? [known] : /[?&]sid=/.test(s) ? ['shoutcast', 'icecast', 'xspf'] : Object.keys(METHODS);
     var i = 0;
     function next(){
       if (i >= order.length) { if (!known) direct[s] = 'no'; return Promise.reject('no'); }
