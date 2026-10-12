@@ -1,0 +1,50 @@
+# Ефирът на София – на всеки ~5 мин събира слушателите на софийските радиа
+# и ги записва в клона „sofia-data“ (stats.json + история по дни в history/).
+# Страницата sofia.html чете оттам радиата, които браузърът не може да провери сам.
+# GitHub пуска планираните задачи с закъснение – реално на всеки 5–15 мин.
+
+name: Ефирът на София
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sofia-stats
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Вземи клона с данните
+        run: |
+          git config --global user.name  "sofia-bot"
+          git config --global user.email "sofia-bot@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin sofia-data >/dev/null; then
+            git clone --depth 1 --branch sofia-data "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
+          else
+            mkdir data && cd data && git init -b sofia-data && \
+            git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          fi
+
+      - name: Събери слушателите
+        run: node scripts/sofia-collect.js data
+
+      - name: Запиши
+        run: |
+          cd data
+          git add -A
+          git commit -q -m "данни $(TZ=Europe/Sofia date '+%F %H:%M')" || exit 0
+          git push -q origin sofia-data
