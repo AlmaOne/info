@@ -1,13 +1,14 @@
-# Ефирът на София – на всеки ~5 мин събира слушателите на софийските радиа
-# и ги записва в клона „sofia-data“ (stats.json + история по дни в history/).
+# Ефирът на София – на всеки ~10 мин събира слушателите на софийските радиа
+# и ги записва в клона „sofia-data“: stats.json + история по дни в history/ (последните 90 дни).
+# Клонът винаги има само ЕДИН запис (презаписва се), за да не расте repo-то.
 # Страницата sofia.html чете оттам радиата, които браузърът не може да провери сам.
-# GitHub пуска планираните задачи с закъснение – реално на всеки 5–15 мин.
+# GitHub пуска планираните задачи със закъснение – реално на всеки 10–20 мин.
 
 name: Ефирът на София
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/10 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -28,23 +29,26 @@ jobs:
         with:
           node-version: 20
 
-      - name: Вземи клона с данните
+      - name: Вземи досегашните данни
         run: |
-          git config --global user.name  "sofia-bot"
-          git config --global user.email "sofia-bot@users.noreply.github.com"
+          mkdir data
           if git ls-remote --exit-code --heads origin sofia-data >/dev/null; then
-            git clone --depth 1 --branch sofia-data "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
-          else
-            mkdir data && cd data && git init -b sofia-data && \
-            git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+            git fetch -q --depth 1 origin sofia-data
+            git --work-tree=data checkout FETCH_HEAD -- .
+            git reset -q
           fi
 
       - name: Събери слушателите
+        env:
+          KEEP_DAYS: 90
         run: node scripts/sofia-collect.js data
 
-      - name: Запиши
+      - name: Запиши (един запис, презаписан)
         run: |
           cd data
+          git init -q -b sofia-data
+          git config user.name  "sofia-bot"
+          git config user.email "sofia-bot@users.noreply.github.com"
           git add -A
-          git commit -q -m "данни $(TZ=Europe/Sofia date '+%F %H:%M')" || exit 0
-          git push -q origin sofia-data
+          git commit -q -m "данни $(TZ=Europe/Sofia date '+%F %H:%M')"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" sofia-data
