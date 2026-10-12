@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="alma-version" content="v1"><!-- при промяна: +1 тук и долу („Ефирът на София · версия …“) -->
+<title>Ефирът на София – Alma Plus</title>
+<!-- Ефирът на София: слушатели онлайн на софийските радиа.
+     Където сървърът позволява, браузърът чете броя сам (на живо, на всяка минута).
+     Останалите – от клона „sofia-data“, който GitHub Actions обновява на ~5 мин (scripts/sofia-collect.js).
+     Списъкът с радиата: sofia/stations.json -->
+<style>
+  :root { --bg:#1C0D2B; --card:#2B1740; --line:#432763; --muted:#B9A7CE; --hl:#C7A4EB; --acc:#7B3FB3; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; --bar:#9b6ad6; --barbg:#3a2152; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:#fff; font:15px/1.45 Roboto,"Segoe UI",Arial,sans-serif; padding:20px 16px 40px; }
+  .wrap { max-width:1100px; margin:0 auto; }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
+  h1 { font-size:22px; }
+  nav { display:flex; gap:6px; flex-wrap:wrap; }
+  nav a { color:var(--muted); text-decoration:none; font-size:14px; padding:6px 12px; border-radius:8px; border:1px solid var(--line); }
+  nav a.listen { background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; cursor:pointer; }
+  nav a.listen:hover { filter:brightness(1.12); }
+  nav a.listen.on { background:transparent; border-color:var(--hl); }
+  nav a.on { color:#fff; background:var(--card); border-color:var(--hl); }
+  nav a:focus-visible, button:focus-visible { outline:2px solid var(--hl); outline-offset:2px; }
+  .ldot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#fbbf24; margin-right:7px; vertical-align:1px; }
+  .ldot.play { background:#C7A4EB; animation:ldb 1.6s ease-in-out infinite; } .ldot.err { background:#f87171; }
+  @keyframes ldb { 50% { opacity:.35; transform:scale(.8); } }
+  .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  @media (max-width:900px) { .grid4 { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:520px) { .grid4 { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; min-width:0; }
+  .card h2 { font-size:13px; color:var(--hl); font-weight:600; margin-bottom:8px; letter-spacing:.02em; }
+  .big { font-size:20px; font-weight:700; display:flex; align-items:center; gap:8px; font-variant-numeric:tabular-nums; min-width:0; }
+  .big span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); flex:none; }
+  .dot.ok { background:var(--ok); } .dot.warn { background:var(--warn); } .dot.bad { background:var(--bad); }
+  .sub { font-size:12.5px; color:var(--muted); margin-top:6px; line-height:1.5; }
+  .sub b { color:#fff; font-weight:600; }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; min-width:0; }
+  .box h2 { font-size:15px; color:var(--hl); font-weight:600; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .box h2 small { color:var(--muted); font-weight:400; font-size:12px; }
+  .note { font-size:12px; color:#8e7aa6; margin-top:6px; line-height:1.5; }
+  .note a, .sub a { color:var(--hl); }
+  .legend { display:flex; gap:16px; font-size:12px; color:var(--muted); margin-top:8px; flex-wrap:wrap; }
+  .legend i { display:inline-block; width:14px; height:8px; vertical-align:middle; margin-right:5px; border-radius:2px; }
+
+  /* FM скала */
+  #dial { display:block; width:100%; height:86px; }
+  #dial text { fill:var(--muted); font-size:10px; font-family:inherit; }
+
+  /* редове с радиата */
+  .rows { display:grid; }
+  .r { display:grid; grid-template-columns:58px minmax(0,1.1fr) minmax(120px,2fr) 96px; gap:14px; align-items:center; padding:9px 4px; border-bottom:1px solid rgba(67,39,99,.5); }
+  .r:last-child { border-bottom:0; }
+  .r.hd { color:var(--muted); font-size:12px; padding-top:0; }
+  .fq { color:var(--muted); font-variant-numeric:tabular-nums; font-size:14px; }
+  .nm { min-width:0; font-weight:600; overflow-wrap:anywhere; }
+  .nm small { display:block; font-weight:400; color:var(--muted); font-size:12px; margin-top:1px; }
+  .meter { position:relative; height:10px; background:var(--barbg); border-radius:3px; }
+  .meter .now { position:absolute; inset:0 auto 0 0; background:var(--bar); border-radius:3px; transition:width .6s ease; }
+  .meter .pk { position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--warn); border-radius:1px; }
+  .nums { text-align:right; font-variant-numeric:tabular-nums; }
+  .nums b { font-size:18px; display:block; line-height:1.15; }
+  .nums span { font-size:11.5px; color:var(--muted); }
+  .tag { display:inline-block; font-size:11px; padding:1px 7px; border-radius:6px; margin-right:4px; vertical-align:1px; font-weight:500; }
+  .tag.live { background:rgba(74,222,128,.15); color:var(--ok); }
+  .tag.srv { background:rgba(185,167,206,.12); color:var(--muted); }
+  .tag.old { background:rgba(251,191,36,.15); color:var(--warn); }
+  .r.off { grid-template-columns:58px minmax(0,1fr); }
+  .empty { color:var(--muted); font-size:13px; padding:10px 4px; }
+  @media (max-width:640px) {
+    .r { grid-template-columns:48px minmax(0,1fr) 78px; gap:10px; }
+    .r .meter { grid-column:2 / 4; grid-row:2; }
+    .r.hd .mh { display:none; }
+  }
+  @media (prefers-reduced-motion:reduce) { .meter .now { transition:none; } .ldot.play { animation:none; } }
+  .ver { margin-top:14px; font-size:12px; color:var(--muted); opacity:.75; text-align:right; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Ефирът на София</h1>
+    <nav><a href="player.html" id="listenBtn" class="listen">▶ Слушай</a><a href="covers.html">Обложки</a><a href="tools.html">Инструменти</a><a href="sofia.html" class="on">Ефирът на София</a><a href="play.html">Пусни на устройство</a><a href="index.html" target="_blank" title="Екранът, който показва устройството при Cast – телевизор, Nest Hub, Smart Clock… (отваря се в нов прозорец; звук няма – пуска се само през Cast)">Екранът на телевизора ↗</a></nav>
+  </div>
+
+  <div class="grid4">
+    <div class="card"><h2>СЛУШАТЕЛИ СЕГА</h2><div class="big"><span id="total">–</span></div><div class="sub">общо онлайн, всички радиа с данни</div></div>
+    <div class="card"><h2>РАДИА С ДАННИ</h2><div class="big"><span id="count">–</span></div><div class="sub" id="countSub"></div></div>
+    <div class="card"><h2>НАЙ-СЛУШАНО</h2><div class="big"><span id="top">–</span></div><div class="sub" id="topSub"></div></div>
+    <div class="card"><h2>ДАННИ</h2><div class="big"><span class="dot" id="dDot"></span><span id="dText">зареждам…</span></div><div class="sub" id="dSub"></div></div>
+  </div>
+
+  <div class="box">
+    <h2>FM скала <small>София, MHz · кръгът е колкото слушателите онлайн</small></h2>
+    <svg id="dial" role="img" aria-label="Радиата в София по честота"></svg>
+  </div>
+
+  <div class="box">
+    <h2>Слушатели онлайн <small id="rowsAt"></small></h2>
+    <div class="rows" id="live"><div class="empty">Зареждам данните…</div></div>
+    <div class="legend">
+      <span><i style="background:var(--bar)"></i>слушатели сега</span>
+      <span><i style="background:var(--warn);width:3px"></i>пик на сървъра</span>
+      <span><span class="tag live">на живо</span>браузърът пита сървъра на радиото всяка минута</span>
+      <span><span class="tag srv">преди N мин</span>от общата проверка на ~5 мин</span>
+    </div>
+  </div>
+
+  <div class="box" id="offBox" hidden>
+    <h2>Без публична статистика <small>сървърът не показва броя слушатели</small></h2>
+    <div class="rows" id="off"></div>
+  </div>
+
+  <div class="box">
+    <h2>Какво показват числата</h2>
+    <div class="note" style="margin-top:0">
+      Броят е на <b style="color:#fff">онлайн слушателите</b> – свързаните в момента към стрийм сървъра на радиото. Слушащите по FM не се виждат никъде; за тях има само проучвания.<br>
+      Едно радио често има по няколко потока (mp3, aac, ogg, различно качество) – тук са сумирани.
+      „Пик на сървъра“ е сборът от пиковете на потоците от последното им рестартиране; те не са непременно по едно и също време, затова е горна граница. По-реалистичен е „днешният пик“.<br>
+      БНР, Bulgaria ON AIR и Радио Антена не показват статистика публично – данни могат да дадат само самите радиа.<br>
+      Историята по дни (CSV, на ~5 мин): <a id="histLink" href="#" target="_blank">папка history в GitHub</a>.
+    </div>
+  </div>
+
+  <div class="ver">Ефирът на София · версия v1</div>
+</div>
+
+<script>
+(function(){
+  // ---- настройки ----
+  var OWNER = (location.hostname.match(/^([^.]+)\.github\.io$/) || [0, 'almaone'])[1];
+  var REPO = location.pathname.split('/')[1] || 'cast';
+  if (!/github\.io$/.test(location.hostname)) { OWNER = 'almaone'; REPO = 'cast'; }
+  var DATA_URL = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/sofia-data/stats.json';
+  var LIVE_EVERY = 60e3, DATA_EVERY = 120e3, TIMEOUT = 7000;
+  document.getElementById('histLink').href = 'https://github.com/' + OWNER + '/' + REPO + '/tree/sofia-data/history';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var fmt = function(n){ return n == null ? '–' : Number(n).toLocaleString('bg-BG'); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  function ago(iso){
+    if (!iso) return '';
+    var m = Math.round((Date.now() - new Date(iso)) / 60000);
+    return m < 1 ? 'току-що' : 'преди ' + m + ' мин';
+  }
+
+  var stations = [];       // от sofia/stations.json
+  var collected = {};      // name -> запис от stats.json
+  var collectedAt = null;
+  var live = {};           // name -> { listeners, peak, streamCount, at }
+  var seenPeak = {};       // name -> най-голямото видяно на живо в тази сесия
+  var direct = {};         // поток -> метод, който работи от браузъра ('no' = не става)
+
+  function timed(url, asJson){
+    var c = new AbortController(); var t = setTimeout(function(){ c.abort(); }, TIMEOUT);
+    return fetch(url, { signal: c.signal, cache: 'no-store' }).then(function(r){
+      clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return asJson ? r.json() : r.text();
+    });
+  }
+
+  // ---- четене на живо от браузъра (само https сървъри, които позволяват CORS) ----
+  var round = new Map();
+  function once(url, asJson){ var k = (asJson ? 'j' : 't') + url; if (!round.has(k)) round.set(k, timed(url, asJson)); return round.get(k); }
+  function parts(s){ var u = new URL(s); return { base: u.origin, mount: u.pathname.replace(/\/$/, '') || '/', u: u }; }
+  var METHODS = {
+    icecast: function(s){ var p = parts(s); return once(p.base + '/status-json.xsl', true).then(function(j){
+      var src = j && j.icestats && j.icestats.source; if (!src) throw 0; if (!Array.isArray(src)) src = [src];
+      var m = src.filter(function(x){ try { return new URL(x.listenurl, p.base).pathname === p.mount; } catch (e) { return false; } })[0] || (src.length === 1 ? src[0] : null);
+      if (!m) throw 0; return { listeners: +m.listeners || 0, peak: +m.listener_peak || 0 };
+    }); },
+    xspf: function(s){ var p = parts(s); return timed(p.base + p.mount + '.xspf', false).then(function(t){
+      var c = t.match(/Current Listeners:\s*(\d+)/i); if (!c) throw 0; var pk = t.match(/Peak Listeners:\s*(\d+)/i);
+      return { listeners: +c[1], peak: pk ? +pk[1] : 0 };
+    }); },
+    shoutcast: function(s){ var p = parts(s); var sid = p.u.searchParams.get('sid') || '1'; return once(p.base + '/stats?sid=' + sid + '&json=1', true).then(function(j){
+      if (j.currentlisteners == null) throw 0; return { listeners: +j.currentlisteners, peak: +j.peaklisteners || 0 };
+    }); }
+  };
+  function readDirect(s){
+    if (location.protocol === 'https:' && /^http:/i.test(s)) return Promise.reject('http');
+    if (/\.m3u8/i.test(s)) return Promise.reject('hls');
+    var known = direct[s];
+    if (known === 'no') return Promise.reject('no');
+    var order = known ? [known] : Object.keys(METHODS);
+    var i = 0;
+    function next(){
+      if (i >= order.length) { if (!known) direct[s] = 'no'; return Promise.reject('no'); }
+      var k = order[i++];
+      return METHODS[k](s).then(function(r){ direct[s] = k; return r; }, next);
+    }
+    return next();
+  }
+  function pollLive(){
+    round = new Map();
+    var jobs = stations.filter(function(s){ return !s.noStats && s.streams && s.streams.length; }).map(function(s){
+      return Promise.allSettled(s.streams.map(readDirect)).then(function(res){
+        var ok = res.filter(function(r){ return r.status === 'fulfilled'; }).map(function(r){ return r.value; });
+        if (ok.length === s.streams.length) {
+          var v = { listeners: 0, peak: 0, streamCount: ok.length, at: new Date().toISOString() };
+          ok.forEach(function(r){ v.listeners += r.listeners; v.peak += r.peak; });
+          live[s.name] = v;
+          if (!seenPeak[s.name] || v.listeners > seenPeak[s.name]) seenPeak[s.name] = v.listeners;
+        } else delete live[s.name];   // не всички потоци се четат от браузъра – ползваме общата проверка
+      });
+    });
+    return Promise.all(jobs).then(render);
+  }
+
+  function pollData(){
+    return timed(DATA_URL + '?t=' + Math.floor(Date.now() / 60000), true).then(function(d){
+      collected = {}; (d.stations || []).forEach(function(s){ collected[s.name] = s; });
+      collectedAt = d.updated || null;
+    }, function(){ /* още няма данни от GitHub Actions */ }).then(render);
+  }
+
+  // ---- изглед ----
+  function view(){
+    return stations.map(function(s){
+      var c = collected[s.name] || {};
+      var L = live[s.name];
+      var dp = c.dayPeak && c.dayPeak.value || 0;
+      if (seenPeak[s.name] > dp) dp = seenPeak[s.name];
+      if (L) return { s: s, ok: true, src: 'live', listeners: L.listeners, peak: L.peak, streams: L.streamCount, dayPeak: dp, note: '' };
+      if (c.status === 'ok') return { s: s, ok: true, src: 'srv', at: collectedAt, listeners: c.listeners, peak: c.peak, streams: c.streamCount, dayPeak: dp, note: c.note || '' };
+      var note = s.noStats || c.note || (collectedAt ? 'Сървърът не показва статистика' : 'Чакам първата обща проверка (до ~10 мин)');
+      return { s: s, ok: false, note: note };
+    });
+  }
+
+  function render(){
+    var v = view();
+    var on = v.filter(function(x){ return x.ok; }).sort(function(a, b){ return b.listeners - a.listeners; });
+    var off = v.filter(function(x){ return !x.ok; });
+    var total = on.reduce(function(a, x){ return a + x.listeners; }, 0);
+    var max = Math.max.apply(null, [1].concat(on.map(function(x){ return Math.max(x.listeners, x.peak || 0); })));
+    var nLive = on.filter(function(x){ return x.src === 'live'; }).length;
+
+    $('total').textContent = fmt(total);
+    $('count').textContent = on.length + ' / ' + stations.length;
+    $('countSub').innerHTML = '<b>' + nLive + '</b> на живо · <b>' + (on.length - nLive) + '</b> от общата проверка';
+    $('top').textContent = on[0] ? on[0].s.name : '–';
+    $('topSub').textContent = on[0] ? fmt(on[0].listeners) + ' слушатели · ' + on[0].s.freq + ' MHz' : '';
+
+    var stale = collectedAt && (Date.now() - new Date(collectedAt)) > 30 * 60e3;
+    $('dDot').className = 'dot ' + (!collectedAt ? 'warn' : stale ? 'bad' : 'ok');
+    $('dText').textContent = collectedAt ? (stale ? 'остарели' : 'наред') : (nLive ? 'само на живо' : 'зареждам…');
+    $('dSub').innerHTML = collectedAt ? 'Обща проверка: <b>' + ago(collectedAt) + '</b>' + (stale ? ' – GitHub Actions май е спрял' : '') : 'Общата проверка още няма данни – виж GitHub Actions.';
+    $('rowsAt').textContent = 'обновено ' + new Date().toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+
+    $('live').innerHTML = on.length
+      ? '<div class="r hd"><span>MHz</span><span>Радио</span><span class="mh">Слушатели</span><span class="nums">сега / пик</span></div>' +
+        on.map(function(x){
+          var tag = x.src === 'live' ? '<span class="tag live">на живо</span>'
+                  : '<span class="tag ' + ((Date.now() - new Date(x.at)) > 20 * 60e3 ? 'old' : 'srv') + '">' + ago(x.at) + '</span>';
+          var sub = tag + (x.streams > 1 ? x.streams + ' потока' : '1 поток') + (x.dayPeak ? ' · днешен пик ' + fmt(x.dayPeak) : '') + (x.note ? ' · ' + esc(x.note) : '');
+          return '<div class="r"><span class="fq">' + esc(x.s.freq) + '</span>' +
+            '<span class="nm">' + esc(x.s.name) + '<small>' + sub + '</small></span>' +
+            '<span class="meter" aria-hidden="true"><span class="now" style="width:' + (x.listeners / max * 100).toFixed(1) + '%"></span>' +
+            (x.peak ? '<span class="pk" style="left:calc(' + (x.peak / max * 100).toFixed(1) + '% - 1px)"></span>' : '') + '</span>' +
+            '<span class="nums"><b>' + fmt(x.listeners) + '</b><span>пик ' + fmt(x.peak) + '</span></span></div>';
+        }).join('')
+      : '<div class="empty">Още няма данни. Радиата, които браузърът може да провери сам, се появяват след няколко секунди; останалите – след първата обща проверка.</div>';
+
+    $('offBox').hidden = off.length === 0;
+    $('off').innerHTML = off.map(function(x){
+      return '<div class="r off"><span class="fq">' + esc(x.s.freq) + '</span><span class="nm">' + esc(x.s.name) + '<small>' + esc(x.note) + '</small></span></div>';
+    }).join('');
+
+    drawDial(v, max);
+  }
+
+  function drawDial(v, max){
+    var svg = $('dial'), W = Math.max(300, svg.clientWidth || 1000), H = 86, base = 66;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var x = function(f){ return 16 + (f - 87.5) / (108 - 87.5) * (W - 32); };
+    var g = '<line x1="16" x2="' + (W - 16) + '" y1="' + base + '" y2="' + base + '" stroke="#432763"/>';
+    var step = W < 520 ? 4 : 2;
+    for (var f = 88; f <= 108; f++) {
+      g += '<line x1="' + x(f) + '" x2="' + x(f) + '" y1="' + (f % 2 ? base - 4 : base - 8) + '" y2="' + base + '" stroke="#B9A7CE" stroke-opacity=".6"/>';
+      if (f % step === 0) g += '<text x="' + x(f) + '" y="' + (base + 15) + '" text-anchor="middle">' + f + '</text>';
+    }
+    v.slice().sort(function(a, b){ return (b.listeners || 0) - (a.listeners || 0); }).forEach(function(d){
+      var f = parseFloat(d.s.freq); if (!(f >= 87.5 && f <= 108)) return;
+      var r = d.ok ? 3 + Math.sqrt(d.listeners / max) * (W < 520 ? 9 : 20) : 3;
+      g += '<circle cx="' + x(f) + '" cy="' + (base - 10 - r) + '" r="' + r + '" fill="' + (d.ok ? '#9b6ad6' : '#432763') + '" fill-opacity="' + (d.ok ? .7 : 1) + '" stroke="#1C0D2B" stroke-width="1">' +
+           '<title>' + esc(d.s.name) + ' · ' + d.s.freq + ' MHz — ' + (d.ok ? fmt(d.listeners) + ' слушатели онлайн' : 'няма данни') + '</title></circle>';
+    });
+    svg.innerHTML = g;
+  }
+  addEventListener('resize', function(){ if (stations.length) render(); });
+
+  // ---- старт ----
+  timed('sofia/stations.json', true).then(function(list){
+    stations = list; render();
+    pollData(); pollLive();
+    setInterval(pollLive, LIVE_EVERY);
+    setInterval(pollData, DATA_EVERY);
+    setInterval(render, 30e3);   // „преди N мин“ да върви
+  }, function(){
+    $('live').innerHTML = '<div class="empty">Не мога да заредя списъка с радиата (sofia/stations.json).</div>';
+  });
+})();
+
+// ---- „▶ Слушай“: малкият плейър (player.html) в отделен прозорец; „Слушаш“ на всички отворени страници ----
+(function(){
+  var btn = document.getElementById('listenBtn'); if (!btn) return;
+  var bc = null; try { bc = new BroadcastChannel('alma-player'); } catch (e) {}
+  var st = 'stop';
+  function paint(){
+    var on = st === 'play' || st === 'wait' || st === 'err';
+    btn.classList.toggle('on', on);
+    btn.innerHTML = on ? '<i class="ldot' + (st === 'play' ? ' play' : st === 'err' ? ' err' : '') + '"></i>Слушаш' : '▶ Слушай';
+    btn.title = on ? 'Свири в малкия плейър – натисни, за да спре' : 'Пусни радиото в малък отделен прозорец (свири, докато сменяш страниците)';
+  }
+  if (bc) { bc.onmessage = function(e){ var m = e.data || {}; if (m.from === 'player') { st = m.state || 'stop'; paint(); } }; bc.postMessage({ cmd: 'state' }); }
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    if (st === 'play' || st === 'wait' || st === 'err') { if (bc) bc.postMessage({ cmd: 'stop' }); return; }
+    var w = null; try { w = window.open('', 'alma-player', 'width=420,height=170,resizable=yes'); } catch (x) {}
+    if (!w) { window.open('player.html?play=1', '_blank'); return; }
+    var fresh = true; try { fresh = !w.location.href || w.location.href === 'about:blank'; } catch (x) {}
+    if (fresh) w.location.href = 'player.html?play=1'; else if (bc) bc.postMessage({ cmd: 'play' });
+    try { w.focus(); } catch (x) {}
+  });
+  paint();
+})();
+</script>
+</body>
+</html>
