@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta name="alma-version" content="v2"><!-- при промяна: +1 тук и долу („Онлайн мониторинг · версия …“) -->
+<meta name="alma-version" content="v3"><!-- при промяна: +1 тук и долу („Онлайн мониторинг · версия …“) -->
 <title>Онлайн мониторинг – Alma Plus</title>
 <!-- Repo „info“ (almaone.github.io/info/sofia.html).
      Онлайн мониторинг: слушатели онлайн на софийските радиа.
@@ -94,7 +94,7 @@
     <div class="legend">
       <span><i style="background:var(--bar)"></i>слушатели сега</span>
       <span><i style="background:var(--warn);width:3px"></i>пик на сървъра</span>
-      <span><span class="tag live">на живо</span>браузърът пита сървъра на радиото всяка минута</span>
+      <span><span class="tag live">на живо</span>проверка на всяка минута</span>
       <span><span class="tag srv">преди N мин</span>от общата проверка на ~5 мин</span>
     </div>
   </div>
@@ -115,7 +115,7 @@
     </div>
   </div>
 
-  <div class="ver">Онлайн мониторинг · версия v2</div>
+  <div class="ver">Онлайн мониторинг · версия v3</div>
 </div>
 
 <script>
@@ -125,6 +125,8 @@
   var REPO = location.pathname.split('/')[1] || 'info';
   if (!/github\.io$/.test(location.hostname)) { OWNER = 'almaone'; REPO = 'info'; }
   var DATA_URL = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/sofia-data/stats.json';
+  // посредник (Cloudflare Worker) за сървърите, които браузърът не може да чете сам (http:// или без CORS)
+  var PROXY = 'https://alma-monitor.m-e59.workers.dev/?u=';
   var LIVE_EVERY = 60e3, DATA_EVERY = 120e3, TIMEOUT = 7000;
   document.getElementById('histLink').href = 'https://github.com/' + OWNER + '/' + REPO + '/tree/sofia-data/history';
 
@@ -152,8 +154,20 @@
   }
 
   // ---- четене на живо от браузъра (само https сървъри, които позволяват CORS) ----
+  // направо, а ако браузърът не може (http:// или сървър без CORS) – през посредника
+  var viaProxy = {};   // сървър -> true, ако се чете само през посредника
+  function smart(url, asJson){
+    var host = new URL(url).host;
+    var mixed = location.protocol === 'https:' && /^http:/i.test(url);
+    if (PROXY && (mixed || viaProxy[host])) return timed(PROXY + encodeURIComponent(url), asJson);
+    return timed(url, asJson).catch(function(e){
+      if (!PROXY || !(e instanceof TypeError)) throw e;   // TypeError = блокирано от браузъра
+      viaProxy[host] = true;
+      return timed(PROXY + encodeURIComponent(url), asJson);
+    });
+  }
   var round = new Map();
-  function once(url, asJson){ var k = (asJson ? 'j' : 't') + url; if (!round.has(k)) round.set(k, timed(url, asJson)); return round.get(k); }
+  function once(url, asJson){ var k = (asJson ? 'j' : 't') + url; if (!round.has(k)) round.set(k, smart(url, asJson)); return round.get(k); }
   function parts(s){ var u = new URL(s); return { base: u.origin, mount: u.pathname.replace(/\/$/, '') || '/', u: u }; }
   var METHODS = {
     icecast: function(s){ var p = parts(s); return once(p.base + '/status-json.xsl', true).then(function(j){
@@ -161,7 +175,7 @@
       var m = src.filter(function(x){ try { return new URL(x.listenurl, p.base).pathname === p.mount; } catch (e) { return false; } })[0] || (src.length === 1 ? src[0] : null);
       if (!m) throw 0; return { listeners: +m.listeners || 0, peak: +m.listener_peak || 0 };
     }); },
-    xspf: function(s){ var p = parts(s); return timed(p.base + p.mount + '.xspf', false).then(function(t){
+    xspf: function(s){ var p = parts(s); return smart(p.base + p.mount + '.xspf', false).then(function(t){
       var c = t.match(/Current Listeners:\s*(\d+)/i); if (!c) throw 0; var pk = t.match(/Peak Listeners:\s*(\d+)/i);
       return { listeners: +c[1], peak: pk ? +pk[1] : 0 };
     }); },
@@ -170,7 +184,7 @@
     }); }
   };
   function readDirect(s){
-    if (location.protocol === 'https:' && /^http:/i.test(s)) return Promise.reject('http');
+    if (!PROXY && location.protocol === 'https:' && /^http:/i.test(s)) return Promise.reject('http');
     if (/\.m3u8/i.test(s)) return Promise.reject('hls');
     var known = direct[s];
     if (known === 'no') return Promise.reject('no');
