@@ -15,7 +15,7 @@ const TZ = 'Europe/Sofia';
 
 async function get(url, asJson) {
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'alma-sofia-collector/1.0', 'Icy-MetaData': '0' },
+    headers: { 'User-Agent': 'radio-stats/1.0', 'Icy-MetaData': '0' },
     signal: AbortSignal.timeout(TIMEOUT),
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
