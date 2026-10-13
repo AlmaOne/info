@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta name="alma-version" content="v3"><!-- при промяна: +1 тук и долу („Онлайн мониторинг · версия …“) -->
+<meta name="alma-version" content="v4"><!-- при промяна: +1 тук и долу („Онлайн мониторинг · версия …“) -->
 <title>Онлайн мониторинг – Alma Plus</title>
 <!-- Repo „info“ (almaone.github.io/info/sofia.html).
      Онлайн мониторинг: слушатели онлайн на софийските радиа.
@@ -115,7 +115,7 @@
     </div>
   </div>
 
-  <div class="ver">Онлайн мониторинг · версия v3</div>
+  <div class="ver">Онлайн мониторинг · версия v4</div>
 </div>
 
 <script>
@@ -168,14 +168,26 @@
   }
   var round = new Map();
   function once(url, asJson){ var k = (asJson ? 'j' : 't') + url; if (!round.has(k)) round.set(k, smart(url, asJson)); return round.get(k); }
-  function parts(s){ var u = new URL(s); return { base: u.origin, mount: u.pathname.replace(/\/$/, '') || '/', u: u }; }
+  function parts(s){
+    var u = new URL(s), px = u.pathname.match(/^\/proxy\/[^/]+/), mp = u.searchParams.get('mp');
+    if (px && mp) { var root = u.origin + px[0], m = mp.replace(/\/$/, '') || '/'; return { base: root, mount: m, u: u, xspf: root + '?mp=' + m + '.xspf' }; }
+    var mount = u.pathname.replace(/\/$/, '') || '/';
+    return { base: u.origin, mount: mount, u: u, xspf: u.origin + mount + '.xspf' };
+  }
+  // панели на хостинги (MediaCP, Centova Cast, AzuraCast) – броят е в JSON
+  function panel(s){
+    if (/\/public-json\/[^/?#]+/.test(s)) return smart(s, true).then(function(j){ if (j.connections == null) throw 0; return { listeners: +j.connections || 0, peak: 0 }; });
+    if (/\/rpc\/[^/]+\/streaminfo\.get/.test(s)) return smart(s, true).then(function(j){ var d = j && j.data && j.data[0]; if (!d || d.listeners == null) throw 0; return { listeners: +d.listeners || 0, peak: 0 }; });
+    if (/\/api\/nowplaying(_static)?\/[^/?#]+/.test(s)) return smart(s, true).then(function(j){ var l = j && j.listeners; if (!l || l.current == null) throw 0; return { listeners: +l.current || 0, peak: 0 }; });
+    return null;
+  }
   var METHODS = {
     icecast: function(s){ var p = parts(s); return once(p.base + '/status-json.xsl', true).then(function(j){
       var src = j && j.icestats && j.icestats.source; if (!src) throw 0; if (!Array.isArray(src)) src = [src];
       var m = src.filter(function(x){ try { return new URL(x.listenurl, p.base).pathname === p.mount; } catch (e) { return false; } })[0] || (src.length === 1 ? src[0] : null);
-      if (!m) throw 0; return { listeners: +m.listeners || 0, peak: +m.listener_peak || 0 };
+      if (!m || m.listeners == null) throw 0; return { listeners: +m.listeners || 0, peak: +m.listener_peak || 0 };
     }); },
-    xspf: function(s){ var p = parts(s); return smart(p.base + p.mount + '.xspf', false).then(function(t){
+    xspf: function(s){ var p = parts(s); return smart(p.xspf, false).then(function(t){
       var c = t.match(/Current Listeners:\s*(\d+)/i); if (!c) throw 0; var pk = t.match(/Peak Listeners:\s*(\d+)/i);
       return { listeners: +c[1], peak: pk ? +pk[1] : 0 };
     }); },
@@ -184,6 +196,7 @@
     }); }
   };
   function readDirect(s){
+    var pj = panel(s); if (pj) return pj;
     if (!PROXY && location.protocol === 'https:' && /^http:/i.test(s)) return Promise.reject('http');
     if (/\.m3u8/i.test(s)) return Promise.reject('hls');
     var known = direct[s];

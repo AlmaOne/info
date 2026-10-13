@@ -31,7 +31,18 @@ function cachedGet(url, asJson) {
 
 function parts(stream) {
   const u = new URL(stream);
-  return { base: u.origin, mount: u.pathname.replace(/\/$/, '') || '/', u };
+  const px = u.pathname.match(/^\/proxy\/[^/]+/), mp = u.searchParams.get('mp');   // Centova прокси ?mp=/поток
+  if (px && mp) { const root = u.origin + px[0], mount = mp.replace(/\/$/, '') || '/'; return { base: root, mount, u, xspf: root + '?mp=' + mount + '.xspf' }; }
+  const mount = u.pathname.replace(/\/$/, '') || '/';
+  return { base: u.origin, mount, u, xspf: u.origin + mount + '.xspf' };
+}
+
+// Панели на хостинги, които дават броя като JSON: MediaCP, Centova Cast, AzuraCast
+async function panel(url) {
+  if (/\/public-json\/[^/?#]+/.test(url)) { const j = await get(url, true); if (j.connections == null) throw new Error('няма брой'); return { listeners: +j.connections || 0, peak: 0 }; }
+  if (/\/rpc\/[^/]+\/streaminfo\.get/.test(url)) { const j = await get(url, true), d = j && j.data && j.data[0]; if (!d || d.listeners == null) throw new Error('няма брой'); return { listeners: +d.listeners || 0, peak: 0 }; }
+  if (/\/api\/nowplaying(_static)?\/[^/?#]+/.test(url)) { const j = await get(url, true), l = j && j.listeners; if (!l || l.current == null) throw new Error('няма брой'); return { listeners: +l.current || 0, peak: 0 }; }
+  return null;
 }
 
 const METHODS = {
@@ -43,11 +54,11 @@ const METHODS = {
     if (!Array.isArray(src)) src = [src];
     const m = src.find(x => x.listenurl && new URL(x.listenurl, base).pathname === mount) || (src.length === 1 ? src[0] : null);
     if (!m) throw new Error('mount ' + mount + ' не е намерен');
+    if (m.listeners == null) throw new Error('сървърът скрива броя на слушателите');
     return { listeners: +m.listeners || 0, peak: +m.listener_peak || 0 };
   },
   async xspf(stream) {
-    const { base, mount } = parts(stream);
-    const t = await get(base + mount + '.xspf', false);
+    const t = await get(parts(stream).xspf, false);
     const cur = t.match(/Current Listeners:\s*(\d+)/i);
     if (!cur) throw new Error('няма XSPF статистика');
     const pk = t.match(/Peak Listeners:\s*(\d+)/i);
@@ -63,6 +74,8 @@ const METHODS = {
 };
 
 async function readStream(stream) {
+  const pj = await panel(stream);
+  if (pj) return pj;
   if (/\.m3u8/i.test(stream)) throw new Error('HLS поток (CDN) – без публичен брояч');
   const errors = [];
   for (const fn of Object.values(METHODS)) {

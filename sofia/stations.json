@@ -1,5 +1,5 @@
 [
-  {"name": "Радио Зорана", "freq": "87.6", "streams": ["https://radio.jump.bg/proxy/radio12/stream"]},
+  {"name": "Радио Зорана", "freq": "87.6", "streams": ["https://radio.jump.bg/rpc/radio12/streaminfo.get"], "play": "https://radio.jump.bg/proxy/radio12/stream"},
   {"name": "Радио Алма Матер", "freq": "88.0", "streams": ["https://a1.vizitec.com:8001/almamater"]},
   {"name": "Bulgaria ON AIR", "freq": "88.4", "streams": ["https://live.radio.bgonair.bg/RadioBOA"]},
   {"name": "Z-Rock (Viva Rock)", "freq": "89.1", "streams": ["https://pulsar.atlantis.bg:8443/zrock", "https://pulsar.atlantis.bg:8443/zrocknew"]},
