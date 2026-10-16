@@ -23,11 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Вземи досегашните данни
         run: |
@@ -51,4 +51,11 @@ jobs:
           git config user.email "sofia-bot@users.noreply.github.com"
           git add -A
           git commit -q -m "данни $(TZ=Europe/Sofia date '+%F %H:%M')"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" sofia-data
+          url="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          for i in 1 2 3 4 5; do
+            git push -q -f "$url" sofia-data && exit 0
+            echo "Опит $i не успя – пробвам пак след $((i*5)) сек."
+            sleep $((i*5))
+          done
+          echo "Записът не успя след 5 опита."
+          exit 1
