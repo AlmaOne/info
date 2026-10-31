@@ -1,0 +1,350 @@
+{
+ "updated": "2026-10-31T21:30:45.789Z",
+ "date": "2026-10-31",
+ "stations": [
+  {
+   "name": "Радио Зорана",
+   "freq": "87.6",
+   "status": "ok",
+   "listeners": 21,
+   "peak": 0,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 57,
+    "at": "2026-10-31T08:20:47.113Z"
+   }
+  },
+  {
+   "name": "Радио Алма Матер",
+   "freq": "88.0",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 15,
+    "at": "2026-10-31T11:30:45.645Z"
+   }
+  },
+  {
+   "name": "Bulgaria ON AIR",
+   "freq": "88.4",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (The operation was aborted due to timeout)",
+   "dayPeak": null
+  },
+  {
+   "name": "Z-Rock (Viva Rock)",
+   "freq": "89.1",
+   "status": "ok",
+   "listeners": 128,
+   "peak": 760,
+   "streamCount": 2,
+   "note": "",
+   "dayPeak": {
+    "value": 258,
+    "at": "2026-10-31T09:20:45.795Z"
+   }
+  },
+  {
+   "name": "Радио Energy",
+   "freq": "89.5",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 1217,
+    "at": "2026-10-31T09:10:47.697Z"
+   }
+  },
+  {
+   "name": "Радио Класик А",
+   "freq": "90.0",
+   "status": "ok",
+   "listeners": 14,
+   "peak": 40,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 23,
+    "at": "2026-10-31T08:40:49.141Z"
+   }
+  },
+  {
+   "name": "Радио Антена",
+   "freq": "91.0",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (The operation was aborted due to timeout)",
+   "dayPeak": null
+  },
+  {
+   "name": "БГ Радио",
+   "freq": "91.9",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 339,
+    "at": "2026-10-31T09:20:45.795Z"
+   }
+  },
+  {
+   "name": "Magic",
+   "freq": "92.4",
+   "status": "ok",
+   "listeners": 162,
+   "peak": 1473,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 350,
+    "at": "2026-10-31T10:30:45.778Z"
+   }
+  },
+  {
+   "name": "БНР програма Христо Ботев",
+   "freq": "92.9",
+   "status": "hidden",
+   "note": "БНР стриймва през CDN (HLS) — няма публичен брояч на слушатели",
+   "dayPeak": null
+  },
+  {
+   "name": "Радио Melody",
+   "freq": "93.4",
+   "status": "ok",
+   "listeners": 159,
+   "peak": 1142,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 393,
+    "at": "2026-10-31T10:30:45.778Z"
+   }
+  },
+  {
+   "name": "Радио K2",
+   "freq": "93.9",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (The operation was aborted due to timeout)",
+   "dayPeak": null
+  },
+  {
+   "name": "БНР Радио София",
+   "freq": "94.5",
+   "status": "hidden",
+   "note": "БНР стриймва през CDN (HLS) — няма публичен брояч на слушатели",
+   "dayPeak": null
+  },
+  {
+   "name": "Радио FM+",
+   "freq": "94.9",
+   "status": "ok",
+   "listeners": 203,
+   "peak": 1629,
+   "streamCount": 2,
+   "note": "",
+   "dayPeak": {
+    "value": 477,
+    "at": "2026-10-31T09:20:45.795Z"
+   }
+  },
+  {
+   "name": "Радио Nova News",
+   "freq": "95.7",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 45,
+    "at": "2026-10-31T06:20:47.343Z"
+   }
+  },
+  {
+   "name": "The Voice",
+   "freq": "96.2",
+   "status": "ok",
+   "listeners": 137,
+   "peak": 883,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 334,
+    "at": "2026-10-31T10:30:45.778Z"
+   }
+  },
+  {
+   "name": "Радио Вероника",
+   "freq": "96.7",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 647,
+    "at": "2026-10-31T11:10:45.434Z"
+   }
+  },
+  {
+   "name": "Радио Витоша",
+   "freq": "97.6",
+   "status": "ok",
+   "listeners": 186,
+   "peak": 1412,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 434,
+    "at": "2026-10-31T09:40:49.939Z"
+   }
+  },
+  {
+   "name": "Радио 1 Рок",
+   "freq": "98.3",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 241,
+    "at": "2026-10-31T10:10:47.930Z"
+   }
+  },
+  {
+   "name": "Радио Веселина",
+   "freq": "99.1",
+   "status": "ok",
+   "listeners": 475,
+   "peak": 2168,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 1382,
+    "at": "2026-10-31T11:40:45.943Z"
+   }
+  },
+  {
+   "name": "Радио City",
+   "freq": "99.7",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 317,
+    "at": "2026-10-31T09:40:49.939Z"
+   }
+  },
+  {
+   "name": "Радио Fresh!",
+   "freq": "100.3",
+   "status": "ok",
+   "listeners": 405,
+   "peak": 2358,
+   "streamCount": 2,
+   "note": "",
+   "dayPeak": {
+    "value": 1044,
+    "at": "2026-10-31T10:40:46.485Z"
+   }
+  },
+  {
+   "name": "bTV Радио",
+   "freq": "101.1",
+   "status": "ok",
+   "listeners": 80,
+   "peak": 1137,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 267,
+    "at": "2026-10-31T07:00:46.689Z"
+   }
+  },
+  {
+   "name": "Радио Nova",
+   "freq": "101.7",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 285,
+    "at": "2026-10-31T10:00:45.821Z"
+   }
+  },
+  {
+   "name": "БНР програма Хоризонт",
+   "freq": "103.0",
+   "status": "hidden",
+   "note": "БНР стриймва през CDN (HLS) — няма публичен брояч на слушатели",
+   "dayPeak": null
+  },
+  {
+   "name": "Радио Фокус (София)",
+   "freq": "103.6",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (The operation was aborted due to timeout)",
+   "dayPeak": null
+  },
+  {
+   "name": "Jazz FM Радио",
+   "freq": "104.0",
+   "status": "ok",
+   "listeners": 100,
+   "peak": 318,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 183,
+    "at": "2026-10-31T10:30:45.778Z"
+   }
+  },
+  {
+   "name": "Дарик Радио",
+   "freq": "105.0",
+   "status": "ok",
+   "listeners": 204,
+   "peak": 1415,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 1193,
+    "at": "2026-10-31T16:20:48.743Z"
+   }
+  },
+  {
+   "name": "Euronews България",
+   "freq": "105.6",
+   "status": "ok",
+   "listeners": 5,
+   "peak": 24,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 12,
+    "at": "2026-10-30T22:00:26.406Z"
+   }
+  },
+  {
+   "name": "Радио 1",
+   "freq": "106.0",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (HTTP 404)",
+   "dayPeak": {
+    "value": 600,
+    "at": "2026-10-31T09:30:46.013Z"
+   }
+  },
+  {
+   "name": "Радио N-Joy",
+   "freq": "106.9",
+   "status": "hidden",
+   "note": "сървърът не показва статистика (The operation was aborted due to timeout)",
+   "dayPeak": {
+    "value": 788,
+    "at": "2026-10-31T09:30:46.013Z"
+   }
+  },
+  {
+   "name": "Радио Ultra",
+   "freq": "107.9",
+   "status": "ok",
+   "listeners": 24,
+   "peak": 56,
+   "streamCount": 1,
+   "note": "",
+   "dayPeak": {
+    "value": 43,
+    "at": "2026-10-31T12:20:46.500Z"
+   }
+  }
+ ]
+}
