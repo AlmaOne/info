@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta name="alma-version" content="v4"><!-- при промяна: +1 тук и долу („Онлайн мониторинг · версия …“) -->
+<meta name="alma-version" content="v5"><!-- при промяна: +1 тук и долу („Онлайн мониторинг · версия …“) -->
 <title>Онлайн мониторинг – Alma Plus</title>
 <!-- Repo „info“ (almaone.github.io/info/sofia.html).
      Онлайн мониторинг: слушатели онлайн на софийските радиа.
@@ -115,7 +115,7 @@
     </div>
   </div>
 
-  <div class="ver">Онлайн мониторинг · версия v4</div>
+  <div class="ver">Онлайн мониторинг · версия v5</div>
 </div>
 
 <script>
@@ -155,14 +155,20 @@
 
   // ---- четене на живо от браузъра (само https сървъри, които позволяват CORS) ----
   // направо, а ако браузърът не може (http:// или сървър без CORS) – през посредника
-  var viaProxy = {};   // сървър -> true, ако се чете само през посредника
+  // v5: „само през посредника“ важи 15 мин, после пак се пробва направо. Преди една случайна
+  // грешка в мрежата пращаше сървъра през посредника завинаги (напр. 47-те потока на Global –
+  // ~50 заявки в минута към Worker-а от един отворен раздел).
+  var viaProxy = {};   // сървър -> кога е решено, че се чете само през посредника
+  var PROXY_RECHECK = 15 * 60e3;
   function smart(url, asJson){
     var host = new URL(url).host;
     var mixed = location.protocol === 'https:' && /^http:/i.test(url);
+    if (viaProxy[host] && Date.now() - viaProxy[host] > PROXY_RECHECK) delete viaProxy[host];
     if (PROXY && (mixed || viaProxy[host])) return timed(PROXY + encodeURIComponent(url), asJson);
     return timed(url, asJson).catch(function(e){
-      if (!PROXY || !(e instanceof TypeError)) throw e;   // TypeError = блокирано от браузъра
-      viaProxy[host] = true;
+      if (!PROXY || !(e instanceof TypeError)) throw e;   // TypeError = блокирано от браузъра (или прекъсване)
+      if (!navigator.onLine) throw e;                      // без интернет посредникът не помага
+      viaProxy[host] = Date.now();
       return timed(PROXY + encodeURIComponent(url), asJson);
     });
   }
@@ -313,10 +319,20 @@
   // ---- старт ----
   timed('sofia/stations.json', true).then(function(list){
     stations = list; render();
-    pollData(); pollLive();
-    setInterval(pollLive, LIVE_EVERY);
-    setInterval(pollData, DATA_EVERY);
-    setInterval(render, 30e3);   // „преди N мин“ да върви
+    // v5: проверките вървят само докато страницата се вижда. Във фонов раздел, при заключен
+    // екран или скрит прозорец спират; щом се покаже – проверява веднага и продължава.
+    var timers = [], lastLive = 0, lastData = 0;
+    function liveTick(){ lastLive = Date.now(); pollLive(); }
+    function dataTick(){ lastData = Date.now(); pollData(); }
+    function start(){
+      if (timers.length) return;
+      if (Date.now() - lastData > DATA_EVERY / 2) dataTick();
+      if (Date.now() - lastLive > LIVE_EVERY / 2) liveTick(); else render();
+      timers = [setInterval(liveTick, LIVE_EVERY), setInterval(dataTick, DATA_EVERY), setInterval(render, 30e3)];
+    }
+    function stop(){ timers.forEach(clearInterval); timers = []; }
+    document.addEventListener('visibilitychange', function(){ document.hidden ? stop() : start(); });
+    if (document.hidden) render(); else start();
   }, function(){
     $('live').innerHTML = '<div class="empty">Не мога да заредя списъка с радиата (sofia/stations.json).</div>';
   });
